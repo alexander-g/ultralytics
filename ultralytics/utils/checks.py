@@ -402,37 +402,39 @@ def check_apt_requirements(requirements):
     Args:
         requirements (list[str]): List of apt package names to check and install.
     """
-    prefix = colorstr("red", "bold", "apt requirements:")
-    # Check which packages are missing
-    missing_packages = []
-    for package in requirements:
-        try:
-            # Use dpkg -l to check if package is installed
-            result = subprocess.run(["dpkg", "-l", package], capture_output=True, text=True, check=False)
-            # Check if package is installed (look for "ii" status)
-            if result.returncode != 0 or not any(
-                line.startswith("ii") and package in line for line in result.stdout.splitlines()
-            ):
-                missing_packages.append(package)
-        except Exception:
-            # If check fails, assume package is not installed
-            missing_packages.append(package)
+    return
 
-    # Install missing packages if any
-    if missing_packages:
-        LOGGER.info(
-            f"{prefix} Ultralytics requirement{'s' * (len(missing_packages) > 1)} {missing_packages} not found, attempting AutoUpdate..."
-        )
-        # Optionally update package list first
-        cmd = (["sudo"] if is_sudo_available() else []) + ["apt", "update"]
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+    # prefix = colorstr("red", "bold", "apt requirements:")
+    # # Check which packages are missing
+    # missing_packages = []
+    # for package in requirements:
+    #     try:
+    #         # Use dpkg -l to check if package is installed
+    #         result = subprocess.run(["dpkg", "-l", package], capture_output=True, text=True, check=False)
+    #         # Check if package is installed (look for "ii" status)
+    #         if result.returncode != 0 or not any(
+    #             line.startswith("ii") and package in line for line in result.stdout.splitlines()
+    #         ):
+    #             missing_packages.append(package)
+    #     except Exception:
+    #         # If check fails, assume package is not installed
+    #         missing_packages.append(package)
 
-        # Build and run the install command
-        cmd = (["sudo"] if is_sudo_available() else []) + ["apt", "install", "-y"] + missing_packages
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+    # # Install missing packages if any
+    # if missing_packages:
+    #     LOGGER.info(
+    #         f"{prefix} Ultralytics requirement{'s' * (len(missing_packages) > 1)} {missing_packages} not found, attempting AutoUpdate..."
+    #     )
+    #     # Optionally update package list first
+    #     cmd = (["sudo"] if is_sudo_available() else []) + ["apt", "update"]
+    #     result = subprocess.run(cmd, check=True, capture_output=True, text=True)
 
-        LOGGER.info(f"{prefix} AutoUpdate success ✅")
-        LOGGER.warning(f"{prefix} {colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n")
+    #     # Build and run the install command
+    #     cmd = (["sudo"] if is_sudo_available() else []) + ["apt", "install", "-y"] + missing_packages
+    #     result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+
+    #     LOGGER.info(f"{prefix} AutoUpdate success ✅")
+    #     LOGGER.warning(f"{prefix} {colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n")
 
 
 @TryExcept()
@@ -464,90 +466,91 @@ def check_requirements(requirements=ROOT.parent / "requirements.txt", exclude=()
         Check with interchangeable packages
         >>> check_requirements([("onnxruntime", "onnxruntime-gpu"), "numpy"])
     """
-    prefix = colorstr("red", "bold", "requirements:")
+    return
+    # prefix = colorstr("red", "bold", "requirements:")
 
-    if env_bool("ULTRALYTICS_SKIP_REQUIREMENTS_CHECKS"):
-        LOGGER.info(f"{prefix} ULTRALYTICS_SKIP_REQUIREMENTS_CHECKS detected, skipping requirements check.")
-        return True
+    # if env_bool("ULTRALYTICS_SKIP_REQUIREMENTS_CHECKS"):
+    #     LOGGER.info(f"{prefix} ULTRALYTICS_SKIP_REQUIREMENTS_CHECKS detected, skipping requirements check.")
+    #     return True
 
-    if isinstance(requirements, Path):  # requirements.txt file
-        file = requirements.resolve()
-        assert file.exists(), f"{prefix} {file} not found, check failed."
-        requirements = [f"{x.name}{x.specifier}" for x in parse_requirements(file) if x.name not in exclude]
-    elif isinstance(requirements, str):
-        requirements = [requirements]
+    # if isinstance(requirements, Path):  # requirements.txt file
+    #     file = requirements.resolve()
+    #     assert file.exists(), f"{prefix} {file} not found, check failed."
+    #     requirements = [f"{x.name}{x.specifier}" for x in parse_requirements(file) if x.name not in exclude]
+    # elif isinstance(requirements, str):
+    #     requirements = [requirements]
 
-    pkgs = []
-    for r in requirements:
-        candidates = r if isinstance(r, (list, tuple)) else [r]
-        satisfied = False
+    # pkgs = []
+    # for r in requirements:
+    #     candidates = r if isinstance(r, (list, tuple)) else [r]
+    #     satisfied = False
 
-        for candidate in candidates:
-            r_stripped = candidate.rpartition("/")[-1].replace(".git", "")  # replace git+https://org/repo.git -> 'repo'
-            match = re.match(r"([a-zA-Z0-9-_]+)([<>!=~]+.*)?", r_stripped)
-            name, required = match[1], match[2].strip() if match[2] else ""
-            try:
-                if check_version(metadata.version(name), required):
-                    satisfied = True
-                    break
-            except (AssertionError, metadata.PackageNotFoundError):
-                continue
+    #     for candidate in candidates:
+    #         r_stripped = candidate.rpartition("/")[-1].replace(".git", "")  # replace git+https://org/repo.git -> 'repo'
+    #         match = re.match(r"([a-zA-Z0-9-_]+)([<>!=~]+.*)?", r_stripped)
+    #         name, required = match[1], match[2].strip() if match[2] else ""
+    #         try:
+    #             if check_version(metadata.version(name), required):
+    #                 satisfied = True
+    #                 break
+    #         except (AssertionError, metadata.PackageNotFoundError):
+    #             continue
 
-        if not satisfied:
-            pkg = candidates[0]
-            if "git+" in pkg:  # strip version constraints from git URLs for pip
-                url, sep, marker = pkg.partition(";")
-                pkg = re.sub(r"[<>!=~]+.*$", "", url) + sep + marker
-            pkgs.append(pkg)
+    #     if not satisfied:
+    #         pkg = candidates[0]
+    #         if "git+" in pkg:  # strip version constraints from git URLs for pip
+    #             url, sep, marker = pkg.partition(";")
+    #             pkg = re.sub(r"[<>!=~]+.*$", "", url) + sep + marker
+    #         pkgs.append(pkg)
 
-    @Retry(times=2, delay=1)
-    def attempt_install(packages, commands, use_uv):
-        """Attempt package installation with uv if available, falling back to pip."""
-        if use_uv:
-            # Use --python to explicitly target current interpreter (venv or system)
-            # This ensures correct installation when VIRTUAL_ENV env var isn't set
-            return subprocess.check_output(
-                f'uv pip install --no-cache-dir --python "{sys.executable}" {packages} {commands} '
-                f"--index-strategy=unsafe-best-match --break-system-packages",
-                shell=True,
-                stderr=subprocess.STDOUT,
-                text=True,
-            )
-        return subprocess.check_output(
-            f'"{sys.executable}" -m pip install --no-cache-dir {packages} {commands}',
-            shell=True,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
+    # @Retry(times=2, delay=1)
+    # def attempt_install(packages, commands, use_uv):
+    #     """Attempt package installation with uv if available, falling back to pip."""
+    #     if use_uv:
+    #         # Use --python to explicitly target current interpreter (venv or system)
+    #         # This ensures correct installation when VIRTUAL_ENV env var isn't set
+    #         return subprocess.check_output(
+    #             f'uv pip install --no-cache-dir --python "{sys.executable}" {packages} {commands} '
+    #             f"--index-strategy=unsafe-best-match --break-system-packages",
+    #             shell=True,
+    #             stderr=subprocess.STDOUT,
+    #             text=True,
+    #         )
+    #     return subprocess.check_output(
+    #         f'"{sys.executable}" -m pip install --no-cache-dir {packages} {commands}',
+    #         shell=True,
+    #         stderr=subprocess.STDOUT,
+    #         text=True,
+    #     )
 
-    s = " ".join(f'"{x}"' for x in pkgs)  # console string
-    if s and constrain:  # append version constraints to prevent upgrades during install
-        s += " " + " ".join(f'"{c}"' for c in constrain)
-    if s:
-        if install and AUTOINSTALL:  # check environment variable
-            # Note uv fails on arm64 macOS and Raspberry Pi runners
-            n = len(pkgs)  # number of packages updates
-            LOGGER.info(f"{prefix} Ultralytics requirement{'s' * (n > 1)} {pkgs} not found, attempting AutoUpdate...")
-            try:
-                t = time.time()
-                assert ONLINE, "AutoUpdate skipped (offline)"
-                use_uv = not ARM64 and check_uv()  # uv fails on ARM64
-                LOGGER.info(attempt_install(s, cmds, use_uv=use_uv))
-                dt = time.time() - t
-                LOGGER.info(f"{prefix} AutoUpdate success ✅ {dt:.1f}s")
-                LOGGER.warning(
-                    f"{prefix} {colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n"
-                )
-            except Exception as e:
-                msg = f"{prefix} ❌ {e}"
-                if hasattr(e, "output") and e.output:
-                    msg += f"\n{e.output}"
-                LOGGER.warning(msg)
-                return False
-        else:
-            return False
+    # s = " ".join(f'"{x}"' for x in pkgs)  # console string
+    # if s and constrain:  # append version constraints to prevent upgrades during install
+    #     s += " " + " ".join(f'"{c}"' for c in constrain)
+    # if s:
+    #     if install and AUTOINSTALL:  # check environment variable
+    #         # Note uv fails on arm64 macOS and Raspberry Pi runners
+    #         n = len(pkgs)  # number of packages updates
+    #         LOGGER.info(f"{prefix} Ultralytics requirement{'s' * (n > 1)} {pkgs} not found, attempting AutoUpdate...")
+    #         try:
+    #             t = time.time()
+    #             assert ONLINE, "AutoUpdate skipped (offline)"
+    #             use_uv = not ARM64 and check_uv()  # uv fails on ARM64
+    #             LOGGER.info(attempt_install(s, cmds, use_uv=use_uv))
+    #             dt = time.time() - t
+    #             LOGGER.info(f"{prefix} AutoUpdate success ✅ {dt:.1f}s")
+    #             LOGGER.warning(
+    #                 f"{prefix} {colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n"
+    #             )
+    #         except Exception as e:
+    #             msg = f"{prefix} ❌ {e}"
+    #             if hasattr(e, "output") and e.output:
+    #                 msg += f"\n{e.output}"
+    #             LOGGER.warning(msg)
+    #             return False
+    #     else:
+    #         return False
 
-    return True
+    # return True
 
 
 def check_executorch_requirements():

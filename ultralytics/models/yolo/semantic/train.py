@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import copy
 from typing import Any
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 
 from ultralytics.data.utils import add_polygon_background

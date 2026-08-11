@@ -698,8 +698,27 @@ class YAML:
         LOGGER.info(f"Printing '{colorstr('bold', 'black', yaml_file)}'\n\n{dump}")
 
 
+def is_torch_package() -> bool:
+    try:
+        import torch_package_importer
+        return True
+    except ImportError as e:
+        return False
+
+def load_default_config_from_file_or_package() -> dict:
+    if is_torch_package():
+        import torch_package_importer
+        default_yaml = torch_package_importer.load_text("ultralytics.extra", "default.yaml")
+        import yaml
+        return yaml.safe_load(default_yaml)
+    else:
+        return YAML.load(DEFAULT_CFG_PATH)
+
+
+
 # Default configuration
-DEFAULT_CFG_DICT = YAML.load(DEFAULT_CFG_PATH)
+# DEFAULT_CFG_DICT = YAML.load(DEFAULT_CFG_PATH)
+DEFAULT_CFG_DICT = load_default_config_from_file_or_package()
 DEFAULT_CFG_KEYS = DEFAULT_CFG_DICT.keys()
 DEFAULT_CFG = IterableSimpleNamespace(**DEFAULT_CFG_DICT)
 
@@ -853,16 +872,17 @@ def is_online() -> bool:
     Returns:
         (bool): True if connection is successful, False otherwise.
     """
-    if env_bool("YOLO_OFFLINE"):
-        return False
-
-    for host in ("one.one.one.one", "dns.google"):
-        try:
-            socket.getaddrinfo(host, 0, socket.AF_UNSPEC, 0, 0, socket.AI_ADDRCONFIG)
-            return True
-        except OSError:
-            continue
     return False
+    # if env_bool("YOLO_OFFLINE"):
+    #     return False
+
+    # for host in ("one.one.one.one", "dns.google"):
+    #     try:
+    #         socket.getaddrinfo(host, 0, socket.AF_UNSPEC, 0, 0, socket.AI_ADDRCONFIG)
+    #         return True
+    #     except OSError:
+    #         continue
+    # return False
 
 
 def is_pip_package(filepath: str = __name__) -> bool:
@@ -877,7 +897,10 @@ def is_pip_package(filepath: str = __name__) -> bool:
     import importlib.util
 
     # Get the spec for the module
-    spec = importlib.util.find_spec(filepath)
+    try:
+        spec = importlib.util.find_spec(filepath)
+    except:
+        return False
 
     # Return whether the spec is not None and the origin is not None (indicating it is a package)
     return spec is not None and spec.origin is not None
@@ -940,7 +963,7 @@ def get_ubuntu_version():
             return None
 
 
-def get_user_config_dir(sub_dir="Ultralytics"):
+def get_user_config_dir(sub_dir="Ultralytics-config"):
     """Return a writable config dir, preferring YOLO_CONFIG_DIR and being OS-aware.
 
     Args:
@@ -949,38 +972,40 @@ def get_user_config_dir(sub_dir="Ultralytics"):
     Returns:
         (Path): The path to the user config directory.
     """
-    if env_dir := os.getenv("YOLO_CONFIG_DIR"):
-        p = Path(env_dir).expanduser() / sub_dir
-    elif LINUX:
-        p = Path(os.getenv("XDG_CONFIG_HOME", Path.home() / ".config")) / sub_dir
-    elif WINDOWS:
-        p = Path.home() / "AppData" / "Roaming" / sub_dir
-    elif MACOS:
-        p = Path.home() / "Library" / "Application Support" / sub_dir
-    else:
-        raise ValueError(f"Unsupported operating system: {platform.system()}")
+    return Path( os.path.join(os.getcwd(), sub_dir) )
 
-    if p.exists():  # already created → trust it
-        return p
-    if is_dir_writeable(p.parent):  # create if possible
-        p.mkdir(parents=True, exist_ok=True)
-        return p
+    # if env_dir := os.getenv("YOLO_CONFIG_DIR"):
+    #     p = Path(env_dir).expanduser() / sub_dir
+    # elif LINUX:
+    #     p = Path(os.getenv("XDG_CONFIG_HOME", Path.home() / ".config")) / sub_dir
+    # elif WINDOWS:
+    #     p = Path.home() / "AppData" / "Roaming" / sub_dir
+    # elif MACOS:
+    #     p = Path.home() / "Library" / "Application Support" / sub_dir
+    # else:
+    #     raise ValueError(f"Unsupported operating system: {platform.system()}")
 
-    # Fallbacks for Docker, GCP/AWS functions where only /tmp is writable
-    for alt in [Path("/tmp") / sub_dir, Path.cwd() / sub_dir]:
-        if alt.exists():
-            return alt
-        if is_dir_writeable(alt.parent):
-            alt.mkdir(parents=True, exist_ok=True)
-            LOGGER.warning(
-                f"user config directory '{p}' is not writable, using '{alt}'. Set YOLO_CONFIG_DIR to override."
-            )
-            return alt
+    # if p.exists():  # already created → trust it
+    #     return p
+    # if is_dir_writeable(p.parent):  # create if possible
+    #     p.mkdir(parents=True, exist_ok=True)
+    #     return p
 
-    # Last fallback → CWD
-    p = Path.cwd() / sub_dir
-    p.mkdir(parents=True, exist_ok=True)
-    return p
+    # # Fallbacks for Docker, GCP/AWS functions where only /tmp is writable
+    # for alt in [Path("/tmp") / sub_dir, Path.cwd() / sub_dir]:
+    #     if alt.exists():
+    #         return alt
+    #     if is_dir_writeable(alt.parent):
+    #         alt.mkdir(parents=True, exist_ok=True)
+    #         LOGGER.warning(
+    #             f"user config directory '{p}' is not writable, using '{alt}'. Set YOLO_CONFIG_DIR to override."
+    #         )
+    #         return alt
+
+    # # Last fallback → CWD
+    # p = Path.cwd() / sub_dir
+    # p.mkdir(parents=True, exist_ok=True)
+    # return p
 
 
 # Define constants (required below)
@@ -1306,12 +1331,14 @@ class JSONDict(dict):
 
     def _save(self):
         """Save the current state of the dictionary to the JSON file."""
-        try:
-            self.file_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.file_path, "w", encoding="utf-8") as f:
-                json.dump(dict(self), f, indent=2, default=self._json_default)
-        except Exception as e:
-            LOGGER.error(f"Error writing to {self.file_path}: {e}")
+        # no persistance thanks
+        return
+        # try:
+        #     self.file_path.parent.mkdir(parents=True, exist_ok=True)
+        #     with open(self.file_path, "w", encoding="utf-8") as f:
+        #         json.dump(dict(self), f, indent=2, default=self._json_default)
+        # except Exception as e:
+        #     LOGGER.error(f"Error writing to {self.file_path}: {e}")
 
     @staticmethod
     def _json_default(obj):
@@ -1420,7 +1447,7 @@ class SettingsManager(JSONDict):
             super().__init__(self.file)
 
             if not self.file.exists() or not self:  # Check if file doesn't exist or is empty
-                LOGGER.info(f"Creating new Ultralytics Settings v{version} file ✅ {self.help_msg}")
+                # LOGGER.info(f"Creating new Ultralytics Settings v{version} file ✅ {self.help_msg}")
                 self.reset()
 
             self._validate_settings()
@@ -1503,7 +1530,9 @@ def vscode_msg(ext="ultralytics.ultralytics-snippets") -> str:
 # Check first-install steps
 PREFIX = colorstr("Ultralytics: ")
 SETTINGS = SettingsManager()  # initialize settings
-PERSISTENT_CACHE = JSONDict(USER_CONFIG_DIR / "persistent_cache.json")  # initialize persistent cache
+#PERSISTENT_CACHE = JSONDict(USER_CONFIG_DIR / "persistent_cache.json")  # initialize persistent cache
+# no persistance thanks
+PERSISTENT_CACHE = dict()
 DATASETS_DIR = Path(SETTINGS["datasets_dir"])  # global datasets directory
 WEIGHTS_DIR = Path(SETTINGS["weights_dir"])  # global weights directory
 RUNS_DIR = Path(SETTINGS["runs_dir"])  # global runs directory
