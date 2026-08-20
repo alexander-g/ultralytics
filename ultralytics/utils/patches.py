@@ -86,7 +86,7 @@ def image_open(filename, *args, **kwargs):
         return _image_open(filename, *args, **kwargs)
 
 
-Image.open = image_open  # apply patch
+# Image.open = image_open  # apply patch
 
 
 def _imread_pil(filename: str, flags: int = cv2.IMREAD_COLOR) -> np.ndarray | None:
