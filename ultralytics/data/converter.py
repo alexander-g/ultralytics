@@ -347,7 +347,7 @@ def convert_coco(
     LOGGER.info(f"{'LVIS' if lvis else 'COCO'} data converted successfully.\nResults saved to {save_dir.resolve()}")
 
 
-def convert_segment_masks_to_yolo_seg(masks_dir: str, output_dir: str, classes: int):
+def convert_segment_masks_to_yolo_seg(masks_dir: str, output_dir: str, classes: int, imread_fn:tp.Optional[tp.Callable] = None):
     """Convert a dataset of segmentation mask images to the YOLO segmentation format.
 
     This function takes the directory containing the binary format mask images and converts them into YOLO segmentation
@@ -386,9 +386,12 @@ def convert_segment_masks_to_yolo_seg(masks_dir: str, output_dir: str, classes: 
     output_dir.mkdir(parents=True, exist_ok=True)
     for mask_path in sorted(Path(masks_dir).iterdir()):
         if mask_path.suffix in {".png", ".jpg"}:
-            mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)  # Read the mask image in grayscale
+            if imread_fn is not None:
+                mask = imread_fn(str(mask_path))
+            else:
+                mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)  # Read the mask image in grayscale
             img_height, img_width = mask.shape[:2]  # patched Windows imread returns (H, W, 1) for grayscale
-            LOGGER.info(f"Processing {mask_path} imgsz = {img_height} x {img_width}")
+            # LOGGER.info(f"Processing {mask_path} imgsz = {img_height} x {img_width}")
 
             unique_values = np.unique(mask)  # Get unique pixel values representing different classes
             yolo_format_data = []
@@ -421,7 +424,7 @@ def convert_segment_masks_to_yolo_seg(masks_dir: str, output_dir: str, classes: 
                 for item in yolo_format_data:
                     line = " ".join(map(str, item))
                     file.write(line + "\n")
-            LOGGER.info(f"Processed and stored at {output_path} imgsz = {img_height} x {img_width}")
+            # LOGGER.info(f"Processed and stored at {output_path} imgsz = {img_height} x {img_width}")
 
 
 def convert_dota_to_yolo_obb(dota_root_path: str):
