@@ -648,13 +648,16 @@ class BaseTrainer:
             torch.cuda.empty_cache()
 
     def read_results_csv(self):
-        """Read results.csv into a dictionary using polars."""
-        import polars as pl  # scope for faster 'import ultralytics'
+        # disabled
+        return {}
 
-        try:
-            return pl.read_csv(self.csv, infer_schema_length=None).to_dict(as_series=False)
-        except Exception:
-            return {}
+        # """Read results.csv into a dictionary using polars."""
+        # import polars as pl  # scope for faster 'import ultralytics'
+
+        # try:
+        #     return pl.read_csv(self.csv, infer_schema_length=None).to_dict(as_series=False)
+        # except Exception:
+        #     return {}
 
     def _model_train(self):
         """Set model in training mode."""
