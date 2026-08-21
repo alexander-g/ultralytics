@@ -209,6 +209,7 @@ class YOLODataset(BaseDataset):
             )
             for lb in labels:
                 lb["segments"] = []
+        assert len_cls != 0, 'Labels are missing or empty'
         if len_cls == 0:
             LOGGER.warning(f"Labels are missing or empty in {cache_path}, training may not work correctly. {HELP_URL}")
         return labels
