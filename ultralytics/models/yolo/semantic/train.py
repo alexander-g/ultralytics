@@ -108,14 +108,14 @@ class SemanticSegmentationTrainer(DetectionTrainer):
         p = class_counts / max(class_counts.sum(), 1.0)  # pixel frequency, bounded for rare classes unlike detection
         return (1.0 / np.log(1.02 + p)) ** self.args.cls_pw
 
-    @plt_settings()
+    # @plt_settings()
     def plot_training_labels(self):
         """Plot training labels class distribution for semantic segmentation.
 
         Samples up to 1000 mask files from the training dataset, accumulates per-class pixel
         counts, and plots a bar chart of class distribution saved to 'labels.jpg'.
         """
-        LOGGER.info(f"Plotting labels to {self.save_dir / 'labels.jpg'}...")
+        # LOGGER.info(f"Plotting labels to {self.save_dir / 'labels.jpg'}...")
         nc = self.data["nc"]
         names = self.data["names"]
         pixel_counts = self.get_class_counts(max_masks=1000)
@@ -123,30 +123,35 @@ class SemanticSegmentationTrainer(DetectionTrainer):
             LOGGER.warning("No semantic mask files found, skipping label plot.")
             return
 
-        _, ax = plt.subplots(1, 1, figsize=(8, 6), tight_layout=True)
-        bars = ax.bar(range(nc), pixel_counts, color=[list(c / 255.0 for c in colors(i, False)) for i in range(nc)])
-        ax.set_xlabel("Class")
-        ax.set_ylabel("Pixels")
-        ax.set_title("Training Labels Class Distribution")
-        if 0 < len(names) < 30:
-            ax.set_xticks(range(len(names)))
-            ax.set_xticklabels(list(names.values()), rotation=90, fontsize=10)
-        for bar in bars:
-            height = bar.get_height()
-            if height > 0:
-                ax.text(
-                    bar.get_x() + bar.get_width() / 2.0,
-                    height,
-                    f"{int(height):,}",
-                    ha="center",
-                    va="bottom",
-                    fontsize=8,
-                )
-        for spine in ax.spines.values():
-            spine.set_visible(False)
+        open(self.save_dir / 'labelcounts.txt', 'w').write('\n'.join([
+            f'{i}: {int(n)} ({100*n/sum(pixel_counts):.1f}%)' for i,n in enumerate(pixel_counts)
+        ]))
+        return
 
-        fname = self.save_dir / "labels.jpg"
-        plt.savefig(fname, dpi=200)
-        plt.close()
-        if self.on_plot:
-            self.on_plot(fname)
+        # _, ax = plt.subplots(1, 1, figsize=(8, 6), tight_layout=True)
+        # bars = ax.bar(range(nc), pixel_counts, color=[list(c / 255.0 for c in colors(i, False)) for i in range(nc)])
+        # ax.set_xlabel("Class")
+        # ax.set_ylabel("Pixels")
+        # ax.set_title("Training Labels Class Distribution")
+        # if 0 < len(names) < 30:
+        #     ax.set_xticks(range(len(names)))
+        #     ax.set_xticklabels(list(names.values()), rotation=90, fontsize=10)
+        # for bar in bars:
+        #     height = bar.get_height()
+        #     if height > 0:
+        #         ax.text(
+        #             bar.get_x() + bar.get_width() / 2.0,
+        #             height,
+        #             f"{int(height):,}",
+        #             ha="center",
+        #             va="bottom",
+        #             fontsize=8,
+        #         )
+        # for spine in ax.spines.values():
+        #     spine.set_visible(False)
+
+        # fname = self.save_dir / "labels.jpg"
+        # plt.savefig(fname, dpi=200)
+        # plt.close()
+        # if self.on_plot:
+        #     self.on_plot(fname)
