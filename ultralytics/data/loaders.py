@@ -23,7 +23,7 @@ from ultralytics.utils.checks import check_requirements
 from ultralytics.utils.patches import imread
 
 
-@dataclass
+# @dataclass
 class SourceTypes:
     """Class to represent various types of input sources for predictions.
 
