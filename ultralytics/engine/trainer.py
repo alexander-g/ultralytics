@@ -598,8 +598,8 @@ class BaseTrainer:
         # Do final val with best.pt
         self.final_eval()
         if RANK in {-1, 0}:
-            if self.args.plots:
-                self.plot_metrics()
+            # if self.args.plots:
+            #     self.plot_metrics()
             self.run_callbacks("on_train_end")
         self._clear_memory()
         for loader in (self.train_loader, self.test_loader):
