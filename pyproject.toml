@@ -19,7 +19,7 @@
 # For comprehensive documentation and usage instructions, visit: https://docs.ultralytics.com
 
 [build-system]
-requires = ["setuptools>=70.0.0,<=82.0.1", "wheel"]
+requires = ["setuptools>=70.0.0,<=82.0.1"]
 build-backend = "setuptools.build_meta"
 
 # Project settings -----------------------------------------------------------------------------------------------------
@@ -63,18 +63,12 @@ classifiers = [
 # Required dependencies ------------------------------------------------------------------------------------------------
 dependencies = [
     "numpy>=1.23.0",
-    "matplotlib>=3.3.0",
     "opencv-python>=4.6.0,!=4.13.0.90", # 4.13.0.90 FIPS selftest crash https://github.com/ultralytics/ultralytics/issues/23373
     "pillow>=7.1.2",
     "pyyaml>=5.3.1",
-    "requests>=2.23.0",
     "torch>=1.8.0",
     "torch>=1.8.0,!=2.4.0; sys_platform == 'win32'", # Windows CPU errors w/ 2.4.0 https://github.com/ultralytics/ultralytics/issues/15049
     "torchvision>=0.9.0",
-    "psutil>=5.8.0", # system utilization
-    "polars>=0.20.0",
-    "nvidia-ml-py>=12.0.0", # NVIDIA GPU monitoring https://pypi.org/project/nvidia-ml-py
-    "ultralytics-thop>=2.0.18", # FLOPs computation https://github.com/ultralytics/thop
 ]
 
 # Optional dependencies ------------------------------------------------------------------------------------------------
